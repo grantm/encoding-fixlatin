@@ -3,54 +3,65 @@ package Encoding::FixLatin;
 use warnings;
 use strict;
 
-=head1 NAME
-
-Encoding::FixLatin - The great new Encoding::FixLatin!
-
-=head1 VERSION
-
-Version 0.01
-
-=cut
+require 5.008;
 
 our $VERSION = '0.01';
 
 
+1;
+
+__END__
+
+=head1 NAME
+
+Encoding::FixLatin - takes mixed encoding input and produces UTF-8 output
+
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+    use Encoding::FixLatin qw(fix_latin);
 
-Perhaps a little code snippet.
+    my $utf8_string = fix_latin($mixed_encoding_string);
 
-    use Encoding::FixLatin;
+=head1 DESCRIPTION
 
-    my $foo = Encoding::FixLatin->new();
-    ...
+Most encoding conversion tools take input in one encoding and produce output
+in another encoding.  This module takes input which may contain characters
+in more than one encoding and makes a best effort to produce UTF-8 output.
 
-=head1 EXPORT
+The following rules are used:
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+=over 4
+
+=item *
+
+ASCII characters (single bytes in the range 0x00 - 0x7F) are passed through
+unchanged.
+
+=item *
+
+Well-formed UTF-8 multi-byte characters are also passed through unchanged.
+
+=item *
+
+Bytes in the range 0xA0 - 0xFF are assumed to be Latin-1 characters (ISO8859-1
+encoded) and are converted to UTF-8.
+
+=item *
+
+Bytes in the range 0x80 - 0x9F are assumed to be Win-Latin-1 characters (CP1252 encoded) and are converted to UTF-8.
+
+=back
+
+=head1 EXPORTS
+
+Nothing is exported by default.  The only public function is C<fix_latin> which
+will be exported on request (as per SYNOPSIS).
 
 =head1 FUNCTIONS
 
-=head2 function1
+=head2 fix_latin( string )
 
-=cut
-
-sub function1 {
-}
-
-=head2 function2
-
-=cut
-
-sub function2 {
-}
-
-=head1 AUTHOR
-
-Grant McLean, C<< <grantm at cpan.org> >>
+Decodes the supplied 'string' and returns a UTF-8 version of the string.
 
 =head1 BUGS
 
@@ -59,14 +70,7 @@ the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Encoding-F
 automatically be notified of progress on your bug as I make changes.
 
 
-
-
 =head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Encoding::FixLatin
-
 
 You can also look for information at:
 
@@ -91,12 +95,14 @@ L<http://search.cpan.org/dist/Encoding-FixLatin/>
 =back
 
 
-=head1 ACKNOWLEDGEMENTS
+=head1 AUTHOR
+
+Grant McLean, C<< <grantm at cpan.org> >>
 
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2009 Grant McLean, all rights reserved.
+Copyright 2009 Grant McLean
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
@@ -104,4 +110,3 @@ under the same terms as Perl itself.
 
 =cut
 
-1; # End of Encoding::FixLatin
