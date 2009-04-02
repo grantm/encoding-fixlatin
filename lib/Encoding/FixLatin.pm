@@ -7,6 +7,18 @@ require 5.008;
 
 our $VERSION = '0.01';
 
+use Exporter qw(import);
+
+our @EXPORT_OK = qw(fix_latin);
+
+
+sub fix_latin {
+    my($input) = @_;
+
+    return unless defined($input);
+    return $input;
+}
+
 
 1;
 
