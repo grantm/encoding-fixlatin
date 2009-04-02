@@ -4,7 +4,7 @@ name     'Encoding-FixLatin';
 all_from 'lib/Encoding/FixLatin.pm';
 author   'Grant McLean <grantm@cpan.org>';
 
-test_requires 'Test::More' => '0.42';
+test_requires 'Test::More' => '0.45';
 
 auto_install;
 
