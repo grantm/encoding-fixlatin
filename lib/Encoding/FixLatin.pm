@@ -103,19 +103,33 @@ __END__
 
 Encoding::FixLatin - takes mixed encoding input and produces UTF-8 output
 
+
 =head1 SYNOPSIS
 
     use Encoding::FixLatin qw(fix_latin);
 
     my $utf8_string = fix_latin($mixed_encoding_string);
 
+
 =head1 DESCRIPTION
 
-Most encoding conversion tools take input in one encoding and produce output
-in another encoding.  This module takes input which may contain characters
-in more than one encoding and makes a best effort to produce UTF-8 output.
+Most encoding conversion tools take input in one encoding and produce output in
+another encoding.  This module takes input which may contain characters in more
+than one encoding and makes a best effort to convert them all to UTF-8 output.
 
-The following rules are used:
+
+=head1 EXPORTS
+
+Nothing is exported by default.  The only public function is C<fix_latin> which
+will be exported on request (as per SYNOPSIS).
+
+
+=head1 FUNCTIONS
+
+=head2 fix_latin( string )
+
+Decodes the supplied 'string' and returns a UTF-8 version of the string.  The
+following rules are used:
 
 =over 4
 
@@ -139,22 +153,74 @@ Bytes in the range 0x80 - 0x9F are assumed to be Win-Latin-1 characters (CP1252 
 
 =back
 
-=head1 EXPORTS
+The achilles heel of these rules is that it's possible for certain combinations
+of two consecutive Latin-1 characters to be misinterpreted as a single UTF-8
+character - ie: there is some risk of data corruption.
 
-Nothing is exported by default.  The only public function is C<fix_latin> which
-will be exported on request (as per SYNOPSIS).
+See the 'LIMITATIONS' section below to quantify this risk for the type of data
+you're working with.
 
-=head1 FUNCTIONS
 
-=head2 fix_latin( string )
+=head1 LIMITATIONS OF THIS MODULE
 
-Decodes the supplied 'string' and returns a UTF-8 version of the string.
+This module is perfectly safe when handling data containing only ASCII and
+UTF-8 characters.  Introducing ISO8859-1 or CP1252 characters does add a risk
+of data corruption (ie: some characters in the input being converted to
+incorrect characters in the output).  To quantify the risk it is necessary to
+understand it's cause.  First, let's break the input bytes into two categories.
+
+=over 4
+
+=item *
+
+ASCII bytes fall into the range 0x00-0x7F - the most significant bit is always
+set to zero.  I'll use the symbol 'a' to represent these bytes.
+
+=item *
+
+Non-ASCII bytes fall into the range 0x80-0xFF - the most significant bit is
+always set to one.  I'll use the symbol 'B' to represent these bytes.
+
+=back
+
+A sequence of ASCII bytes ('aaa') is always unambiguous and will not be
+misinterpreted.
+
+Lone non-ASCII bytes within sequences of ASCII bytes ('aaBaBa') are also
+unambiguous and will not be misinterpreted.
+
+The potential for error occurs with two (or more) consecutive non-ASCII bytes.
+For example the sequence 'BB' might be intended to represent two characters in
+one of the legacy encodings or a single character in UTF-8.  Because this
+module gives precedence to the UTF-8 characters it is possible that a random
+pair of legacy characters may be misinterpreted as a single UTF-8 character.
+
+The risk is reduced by the fact that not all pairs of non-ASCII bytes form
+valid UTF-8 sequences.  Every non-ASCII UTF-8 character is made up of two or
+more 'B' bytes and no 'a' bytes.  For a two-byte character, the first byte must
+be in the range 0xC0-0xDF and the second must be in the range 0x80-0xBF.
+
+Any pair of 'BB' bytes that do not fall into the required ranges are
+unambiguous and will not be misinterpreted.
+
+Pairs of 'BB' bytes that are actually individual Latin-1 characters but
+happen to fall into the required ranges to be misinterpreted as a UTF-8
+character are rather unlikely to appear in normal text.  If you look those
+ranges up on a Latin-1 code chart you'll see that the first character would
+need to be an uppercase accented letter and the second  would need to be a
+non-printable control character or a special punctuation symbol.
+
+One way to summarise the role of this module is that it guarantees to
+produce UTF-8 output, possibly at the cost of introducing the odd 'typo'.
+
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-encoding-fixlatin at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Encoding-FixLatin>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
+Please report any bugs to C<bug-encoding-fixlatin at rt.cpan.org>, or through
+the web interface at
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Encoding-FixLatin>.  I will be
+notified, and then you'll automatically be notified of progress on your bug as
+I make changes.
 
 
 =head1 SUPPORT
