@@ -7,6 +7,7 @@ require 5.008;
 
 our $VERSION = '0.01';
 
+use Carp     qw(croak);
 use Exporter qw(import);
 
 our @EXPORT_OK = qw(fix_latin);
@@ -24,8 +25,15 @@ my $utf8_5     = '[\xF8-\xFB]' . $cont_byte . '{4}';
 
 my $nibble_good_chars = qr{^($ascii_char+|$utf8_2|$utf8_3|$utf8_4|$utf8_5)(.*)$}s;
 
+my %known_opt = map { $_ => 1 } qw(bytes_only);
+
 sub fix_latin {
-    my($input) = @_;
+    my $input = shift;
+    my %opt   = @_;
+
+    foreach (keys %opt) {
+        croak "Unknown option '$_'" unless $known_opt{$_};
+    }
 
     return unless defined($input);
     _init_byte_map() unless $byte_map;
@@ -43,7 +51,7 @@ sub fix_latin {
         }
         $input = $rest;
     }
-    utf8::decode($output);
+    utf8::decode($output) unless $opt{bytes_only};
     return $output;
 }
 
@@ -126,7 +134,7 @@ will be exported on request (as per SYNOPSIS).
 
 =head1 FUNCTIONS
 
-=head2 fix_latin( string )
+=head2 fix_latin( string, options ... )
 
 Decodes the supplied 'string' and returns a UTF-8 version of the string.  The
 following rules are used:
@@ -160,6 +168,21 @@ character - ie: there is some risk of data corruption.
 See the 'LIMITATIONS' section below to quantify this risk for the type of data
 you're working with.
 
+The C<fix_latin> function accepts options as name => value pairs.  The
+following options are recognised:
+
+=over 4
+
+=item bytes_only => 1/0
+
+The value returned by fix_latin is normally a Perl character string and will
+have the utf8 flag set if it contains non-ASCII characters.  If you set the
+C<bytes_only> option to a true value, the returned string will be a binary
+string of UTF-8 bytes.  The utf8 flag will not be set.  This is useful if
+you're going to immediately use the string in an IO operation and wish to avoid
+the overhead of converting to and from Perl's internal representation.
+
+=back
 
 =head1 LIMITATIONS OF THIS MODULE
 
