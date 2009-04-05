@@ -8,7 +8,7 @@ test_requires 'Test::More' => '0.45';
 
 auto_install;
 
-#install_script 'fix_latin';
+install_script 'fix_latin';
 
 WriteAll;
 
