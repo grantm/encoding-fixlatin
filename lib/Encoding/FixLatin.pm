@@ -5,7 +5,7 @@ use strict;
 
 require 5.008;
 
-our $VERSION = '0.01';
+our $VERSION = '1.00';
 
 use Carp     qw(croak);
 use Exporter qw(import);
