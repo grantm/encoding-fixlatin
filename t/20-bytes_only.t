@@ -1,6 +1,6 @@
 #!perl -T
 
-use Test::More 'no_plan';# tests => 16;
+use Test::More tests => 6;
 
 BEGIN {
     use_ok( 'Encoding::FixLatin', 'fix_latin' );
