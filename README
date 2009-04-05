@@ -2,9 +2,10 @@ Encoding-FixLatin
 
 Converts mixed encoding input UTF-8 output.
 
-Most encoding conversion tools take input in one encoding and produce output
-in another encoding.  This module takes input which may contain characters
-in more than one encoding and makes a best effort to produce UTF-8 output.
+Most encoding conversion tools take input in one encoding and produce output in
+another encoding.  This module takes input which may contain characters in more
+than one encoding (specifically, a mixture of ASCII, ISO8859-1, CP1252 and
+UTF-8) and makes a best effort to produce UTF-8 output.
 
 This module is pure Perl and requires at least Perl version 5.8.
 
@@ -28,6 +29,9 @@ perldoc command.
     perldoc Encoding::FixLatin
 
 You can also look for information at:
+
+    CPAN module home page and documentation
+        http://search.cpan.org/dist/Encoding-FixLatin/
 
     RT, CPAN's request tracker
         http://rt.cpan.org/NoAuth/Bugs.html?Dist=Encoding-FixLatin
