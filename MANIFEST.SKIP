@@ -1,0 +1,8 @@
+\.git
+\.(SKIP|bak|old|swp|gz)$
+^Makefile$
+^blib
+^pm_to_blib
+^cover_db
+^TODO
+^Encoding-FixLatin
