@@ -163,13 +163,14 @@ Bytes in the range 0x80 - 0x9F are assumed to be Win-Latin-1 characters (CP1252 
 
 The achilles heel of these rules is that it's possible for certain combinations
 of two consecutive Latin-1 characters to be misinterpreted as a single UTF-8
-character - ie: there is some risk of data corruption.
+character - ie: there is some risk of data corruption.  See the 'LIMITATIONS'
+section below to quantify this risk for the type of data you're working with.
 
-See the 'LIMITATIONS' section below to quantify this risk for the type of data
-you're working with.
+If you pass in a string that already has the 'utf8' flag set then C<fix_latin>
+will simply return the string immediately.
 
-The C<fix_latin> function accepts options as name => value pairs.  The
-following options are recognised:
+The C<fix_latin> function accepts options as name => value pairs.  Currently
+only one option is recognised:
 
 =over 4
 
@@ -181,6 +182,13 @@ C<bytes_only> option to a true value, the returned string will be a binary
 string of UTF-8 bytes.  The utf8 flag will not be set.  This is useful if
 you're going to immediately use the string in an IO operation and wish to avoid
 the overhead of converting to and from Perl's internal representation.
+
+As mentioned above, strings that already have the 'utf8' flag set are always
+returned unaltered.  They will be returned in their original character string
+form regardless of the value of the 'bytes_only' option.  If you really want
+to convert a character string to UTF-8 bytes then you could use the
+C<encode_utf8> function from the Encode module (or just push the :utf8 layer
+onto your IO file handle with C<binmode>).
 
 =back
 
