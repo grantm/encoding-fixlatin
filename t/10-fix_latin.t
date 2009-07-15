@@ -1,6 +1,6 @@
 #!perl -T
 
-use Test::More tests => 16;
+use Test::More tests => 17;
 
 BEGIN {
     use_ok( 'Encoding::FixLatin', 'fix_latin' );
@@ -43,4 +43,7 @@ is(fix_latin("\x80") => "\x{20AC}",
 
 is(fix_latin("\x81") => "\x{81}",
     'Latin-1 control character converted');
+
+is(fix_latin("M\x{101}ori") => "M\x{101}ori",
+    'UTF-8 string passed through unscathed');
 

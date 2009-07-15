@@ -5,10 +5,11 @@ use strict;
 
 require 5.008;
 
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 use Carp     qw(croak);
 use Exporter qw(import);
+use Encode   qw(is_utf8 encode_utf8);
 
 our @EXPORT_OK = qw(fix_latin);
 
@@ -37,6 +38,15 @@ sub fix_latin {
 
     return unless defined($input);
     _init_byte_map() unless $byte_map;
+
+    if(is_utf8($input)) {       # input string already has utf8 flag set
+        if($opt{bytes_only}) {
+            return encode_utf8($input);
+        }
+        else {
+            return $input;
+        }
+    }
 
     my $output = '';
     my $char   = '';
@@ -166,8 +176,11 @@ of two consecutive Latin-1 characters to be misinterpreted as a single UTF-8
 character - ie: there is some risk of data corruption.  See the 'LIMITATIONS'
 section below to quantify this risk for the type of data you're working with.
 
-If you pass in a string that already has the 'utf8' flag set then C<fix_latin>
-will simply return the string immediately.
+If you pass in a string that is already a UTF-8 character string (the utf8 flag
+is set on the Perl scalar) then the string will simply be returned unchanged.
+However if the 'bytes_only' option is specified (see below), the returned
+string will be a byte string rather than a character string.  The rules
+described above will not be applied in either case.
 
 The C<fix_latin> function accepts options as name => value pairs.  Currently
 only one option is recognised:
