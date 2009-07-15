@@ -1,5 +1,8 @@
 Revision history for Encoding-FixLatin
 
-1.00    2009-04-05
-        Initial public release
+1.01  2009-07-15
+      - add handling for input which already has utf8 flag set
+
+1.00  2009-04-05
+      - Initial public release
 
