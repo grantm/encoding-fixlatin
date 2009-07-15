@@ -196,13 +196,6 @@ string of UTF-8 bytes.  The utf8 flag will not be set.  This is useful if
 you're going to immediately use the string in an IO operation and wish to avoid
 the overhead of converting to and from Perl's internal representation.
 
-As mentioned above, strings that already have the 'utf8' flag set are always
-returned unaltered.  They will be returned in their original character string
-form regardless of the value of the 'bytes_only' option.  If you really want
-to convert a character string to UTF-8 bytes then you could use the
-C<encode_utf8> function from the Encode module (or just push the :utf8 layer
-onto your IO file handle with C<binmode>).
-
 =back
 
 =head1 LIMITATIONS OF THIS MODULE
