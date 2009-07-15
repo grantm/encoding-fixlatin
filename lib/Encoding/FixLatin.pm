@@ -282,6 +282,10 @@ L<http://cpanratings.perl.org/d/Encoding-FixLatin>
 
 L<http://search.cpan.org/dist/Encoding-FixLatin/>
 
+=item * Source code repository
+
+L<http://github.com/grantm/encoding-fixlatin/tree/master>
+
 =back
 
 
