@@ -1,6 +1,6 @@
 #!perl -T
 
-use Test::More tests => 17;
+use Test::More tests => 18;
 
 BEGIN {
     use_ok( 'Encoding::FixLatin', 'fix_latin' );
@@ -46,4 +46,7 @@ is(fix_latin("\x81") => "\x{81}",
 
 is(fix_latin("M\x{101}ori") => "M\x{101}ori",
     'UTF-8 string passed through unscathed');
+
+is(fix_latin("\xE0\x83\x9A") => "\x{DA}",
+    'Over-long UTF-8 sequence looks OK to Perl');
 

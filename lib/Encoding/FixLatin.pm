@@ -5,7 +5,7 @@ use strict;
 
 require 5.008;
 
-our $VERSION = '1.01';
+our $VERSION = '1.02';
 
 use Carp     qw(croak);
 use Exporter qw(import);
@@ -16,15 +16,13 @@ our @EXPORT_OK = qw(fix_latin);
 
 my $byte_map;
 
-my $ascii_char = '[\x00-\x7F]';
-my $cont_byte  = '[\x80-\xBF]';
+my $ascii_str = qr{\A([\x00-\x7F]+)(.*)\z}s;
 
-my $utf8_2     = '[\xC0-\xDF]' . $cont_byte;
-my $utf8_3     = '[\xE0-\xEF]' . $cont_byte . '{2}';
-my $utf8_4     = '[\xF0-\xF7]' . $cont_byte . '{3}';
-my $utf8_5     = '[\xF8-\xFB]' . $cont_byte . '{4}';
-
-my $nibble_good_chars = qr{^($ascii_char+|$utf8_2|$utf8_3|$utf8_4|$utf8_5)(.*)$}s;
+my $cont_byte = '[\x80-\xBF]';
+my $utf8_2    = qr{\A([\xC0-\xDF])($cont_byte)(.*)\z}s;
+my $utf8_3    = qr{\A([\xE0-\xEF])($cont_byte)($cont_byte)(.*)\z}s;
+my $utf8_4    = qr{\A([\xF0-\xF7])($cont_byte)($cont_byte)($cont_byte)(.*)\z}s;
+my $utf8_5    = qr{\A([\xF8-\xFB])($cont_byte)($cont_byte)($cont_byte)($cont_byte)(.*)\z}s;
 
 my %known_opt = map { $_ => 1 } qw(bytes_only);
 
@@ -52,8 +50,25 @@ sub fix_latin {
     my $char   = '';
     my $rest   = '';
     while(length($input) > 0) {
-        if(($char, $rest) = $input =~ $nibble_good_chars) {
-            $output .= $char;
+        if($input =~ $ascii_str) {
+            $output .= $1;
+            $rest = $2;
+        }
+        elsif($input =~ $utf8_2) {
+            $output .= _decode_utf8(ord($1) & 0x1F, $2);
+            $rest = $3;
+        }
+        elsif($input =~ $utf8_3) {
+            $output .= _decode_utf8(ord($1) & 0x0F, $2, $3);
+            $rest = $4;
+        }
+        elsif($input =~ $utf8_4) {
+            $output .= _decode_utf8(ord($1) & 0x07, $2, $3, $4);
+            $rest = $5;
+        }
+        elsif($input =~ $utf8_5) {
+            $output .= _decode_utf8(ord($1) & 0x03, $2, $3, $4, $5);
+            $rest = $6;
         }
         else {
             ($char, $rest) = $input =~ /^(.)(.*)$/s;
@@ -63,6 +78,15 @@ sub fix_latin {
     }
     utf8::decode($output) unless $opt{bytes_only};
     return $output;
+}
+
+
+sub _decode_utf8 {
+    my $i = shift;
+    while(@_) {
+        $i = ($i << 6) + (ord(shift) & 0x3F);
+    }
+    return encode_utf8(chr($i));
 }
 
 

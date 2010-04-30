@@ -1,6 +1,6 @@
 #!perl -T
 
-use Test::More tests => 7;
+use Test::More tests => 12;
 
 BEGIN {
     use_ok( 'Encoding::FixLatin', 'fix_latin' );
@@ -23,3 +23,19 @@ is(length(fix_latin("a\xA0b", bytes_only => 1)), 4,
 
 is(fix_latin("M\x{101}ori", bytes_only => 1) => "M\xC4\x81ori",
     'UTF-8 string converted to bytes');
+
+is(fix_latin("\xE0\x83\x9A", bytes_only => 1) => "\xC3\x9A",
+    'Over-long UTF-8 string shortened to correct bytes');
+
+is(fix_latin("\xC0\xAB", bytes_only => 1) => "+",
+    '2 byte over-long UTF-8 string shortened to 1 byte');
+
+is(fix_latin("\xC0\x80\xAB", bytes_only => 1) => "+",
+    '3 byte over-long UTF-8 string shortened to 1 byte');
+
+is(fix_latin("\xC0\x80\x80\xAB", bytes_only => 1) => "+",
+    '4 byte over-long UTF-8 string shortened to 1 byte');
+
+is(fix_latin("\xC0\x80\x80\x80\xAB", bytes_only => 1) => "+",
+    '5 byte over-long UTF-8 string shortened to 1 byte');
+
