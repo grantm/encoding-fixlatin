@@ -186,6 +186,11 @@ Well-formed UTF-8 multi-byte characters are also passed through unchanged.
 
 =item *
 
+UTF-8 multi-byte character which are over-long but otherwise well-formed are
+converted to the shortest UTF-8 normal form.
+
+=item *
+
 Bytes in the range 0xA0 - 0xFF are assumed to be Latin-1 characters (ISO8859-1
 encoded) and are converted to UTF-8.
 

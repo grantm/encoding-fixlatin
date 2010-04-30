@@ -58,8 +58,9 @@ The script acts as a filter, taking source data which may contain a mix of
 ASCII, UTF8, ISO8859-1 and CP1252 characters, and producing output will be all
 ASCII/UTF8.
 
-Multi-byte UTF8 characters will be passed through unchanged.  Single byte
-characters will be converted as follows:
+Multi-byte UTF8 characters will be passed through unchanged (although over-long
+UTF8 byte sequences will be converted to the shortest normal form).  Single
+byte characters will be converted as follows:
 
   0x00 - 0x7F   ASCII - passed through unchanged
   0x80 - 0x9F   Converted to UTF8 using CP1252 mappings
