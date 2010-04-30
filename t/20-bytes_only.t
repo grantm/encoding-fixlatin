@@ -30,12 +30,12 @@ is(fix_latin("\xE0\x83\x9A", bytes_only => 1) => "\xC3\x9A",
 is(fix_latin("\xC0\xAB", bytes_only => 1) => "+",
     '2 byte over-long UTF-8 string shortened to 1 byte');
 
-is(fix_latin("\xC0\x80\xAB", bytes_only => 1) => "+",
+is(fix_latin("\xE0\x80\xAB", bytes_only => 1) => "+",
     '3 byte over-long UTF-8 string shortened to 1 byte');
 
-is(fix_latin("\xC0\x80\x80\xAB", bytes_only => 1) => "+",
+is(fix_latin("\xF0\x80\x80\xAB", bytes_only => 1) => "+",
     '4 byte over-long UTF-8 string shortened to 1 byte');
 
-is(fix_latin("\xC0\x80\x80\x80\xAB", bytes_only => 1) => "+",
+is(fix_latin("\xF8\x80\x80\x80\xAB", bytes_only => 1) => "+",
     '5 byte over-long UTF-8 string shortened to 1 byte');
 
