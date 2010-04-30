@@ -366,7 +366,7 @@ Grant McLean, C<< <grantm at cpan.org> >>
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2009 Grant McLean
+Copyright 2009-2010 Grant McLean
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
