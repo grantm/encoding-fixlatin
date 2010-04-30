@@ -24,18 +24,26 @@ my $utf8_3    = qr{\A([\xE0-\xEF])($cont_byte)($cont_byte)(.*)\z}s;
 my $utf8_4    = qr{\A([\xF0-\xF7])($cont_byte)($cont_byte)($cont_byte)(.*)\z}s;
 my $utf8_5    = qr{\A([\xF8-\xFB])($cont_byte)($cont_byte)($cont_byte)($cont_byte)(.*)\z}s;
 
-my %known_opt = map { $_ => 1 } qw(bytes_only);
+my %known_opt = map { $_ => 1 } qw(bytes_only ascii_hex);
+
+my %non_1252  = (
+    "\x81" => '%81',
+    "\x8D" => '%8D',
+    "\x8F" => '%8F',
+    "\x90" => '%90',
+    "\x9D" => '%9D',
+);
 
 sub fix_latin {
     my $input = shift;
-    my %opt   = @_;
+    my %opt   = (ascii_hex => 1, @_);
 
     foreach (keys %opt) {
         croak "Unknown option '$_'" unless $known_opt{$_};
     }
 
     return unless defined($input);
-    _init_byte_map() unless $byte_map;
+    _init_byte_map(\%opt) unless $byte_map;
 
     if(is_utf8($input)) {       # input string already has utf8 flag set
         if($opt{bytes_only}) {
@@ -72,7 +80,12 @@ sub fix_latin {
         }
         else {
             ($char, $rest) = $input =~ /^(.)(.*)$/s;
-            $output .= $byte_map->{$char};
+            if($opt{ascii_hex} && exists $non_1252{$char}) {
+                $output .= $non_1252{$char};
+            }
+            else {
+                $output .= $byte_map->{$char};
+            }
         }
         $input = $rest;
     }
@@ -196,7 +209,9 @@ encoded) and are converted to UTF-8.
 
 =item *
 
-Bytes in the range 0x80 - 0x9F are assumed to be Win-Latin-1 characters (CP1252 encoded) and are converted to UTF-8.
+Bytes in the range 0x80 - 0x9F are assumed to be Win-Latin-1 characters (CP1252
+encoded) and are converted to UTF-8.  Except for the five bytes in this range
+which are not defined in CP1252 (see the C<ascii_hex> option below).
 
 =back
 
@@ -211,8 +226,8 @@ However if the 'bytes_only' option is specified (see below), the returned
 string will be a byte string rather than a character string.  The rules
 described above will not be applied in either case.
 
-The C<fix_latin> function accepts options as name => value pairs.  Currently
-only one option is recognised:
+The C<fix_latin> function accepts options as name => value pairs.  Recognised
+options are:
 
 =over 4
 
@@ -224,6 +239,32 @@ C<bytes_only> option to a true value, the returned string will be a binary
 string of UTF-8 bytes.  The utf8 flag will not be set.  This is useful if
 you're going to immediately use the string in an IO operation and wish to avoid
 the overhead of converting to and from Perl's internal representation.
+
+=item ascii_hex => 1/0
+
+Bytes in the range 0x80-0x9F are assumed to be CP1252, however CP1252 does not
+define a mapping for 5 of these bytes (0x81, 0x8D, 0x8F, 0x90 and 0x9D).
+
+=over 4
+
+=item *
+
+If the ascii_hex option is set to true (the default), these bytes will be
+converted to 3 character ASCII hex strings of the form %XX.  For example the
+byte 0x81 will become %81.
+
+=item *
+
+If the ascii_hex option is set to false, these bytes will be treated as Latin-1
+control characters and converted to the equivalent UTF-8 multi-byte sequences.
+
+=back
+
+When processing text strings you will almost certainly never encounter these
+bytes at all.  The most likely reason you would see them is if a malicious
+attacker was feeding random bytes to your application.  It is difficult to
+conceive of a scenario in which it makes sense to change this option from its
+default setting.
 
 =back
 

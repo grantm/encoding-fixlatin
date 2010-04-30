@@ -1,6 +1,6 @@
 #!perl -T
 
-use Test::More tests => 18;
+use Test::More tests => 21;
 
 BEGIN {
     use_ok( 'Encoding::FixLatin', 'fix_latin' );
@@ -39,14 +39,24 @@ is(fix_latin("\xE2\x82\xAC") => "\x{20AC}",
     'UTF-8 Euro symbol passed through');
 
 is(fix_latin("\x80") => "\x{20AC}",
-    'Win-Latin-1 Euro symbol converted');
-
-is(fix_latin("\x81") => "\x{81}",
-    'Latin-1 control character converted');
+    'CP1252 Euro symbol converted');
 
 is(fix_latin("M\x{101}ori") => "M\x{101}ori",
     'UTF-8 string passed through unscathed');
 
 is(fix_latin("\xE0\x83\x9A") => "\x{DA}",
     'Over-long UTF-8 sequence looks OK to Perl');
+
+is(fix_latin("\x80\x81\x82") => "\x{20AC}%81\x{201A}",
+    'Undefined (CP1252) byte ASCIIised by default');
+
+is(fix_latin("\x81\x8D\x8F\x90\x9D") => "%81%8D%8F%90%9D",
+    'All undefined (CP1252) bytes ASCIIised by default');
+
+is(fix_latin("\x81", ascii_hex => 0) => "\x{81}",
+    'Latin-1 control character converted');
+
+is(fix_latin("\x81\x8D\x8F\x90\x9D", ascii_hex => 0)
+    => "\x{81}\x{8D}\x{8F}\x{90}\x{9D}",
+    'All undefined (CP1252) bytes treated as ctrl chars on request');
 
