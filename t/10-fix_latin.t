@@ -1,6 +1,6 @@
 #!perl -T
 
-use Test::More tests => 21;
+use Test::More tests => 22;
 
 BEGIN {
     use_ok( 'Encoding::FixLatin', 'fix_latin' );
@@ -46,6 +46,9 @@ is(fix_latin("M\x{101}ori") => "M\x{101}ori",
 
 is(fix_latin("\xE0\x83\x9A") => "\x{DA}",
     'Over-long UTF-8 sequence looks OK to Perl');
+
+is(fix_latin("\xC0\xBCscript>\xE0\x80\xAE./\xF0\x80\x80\xBB") => "<script>../;",
+    'Malicious over-long UTF-8 sequence converted to plain ASCII');
 
 is(fix_latin("\x80\x81\x82") => "\x{20AC}%81\x{201A}",
     'Undefined (CP1252) byte ASCIIised by default');
