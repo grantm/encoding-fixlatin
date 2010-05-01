@@ -24,7 +24,7 @@ my $utf8_3    = qr{\A([\xE0-\xEF])($cont_byte)($cont_byte)(.*)\z}s;
 my $utf8_4    = qr{\A([\xF0-\xF7])($cont_byte)($cont_byte)($cont_byte)(.*)\z}s;
 my $utf8_5    = qr{\A([\xF8-\xFB])($cont_byte)($cont_byte)($cont_byte)($cont_byte)(.*)\z}s;
 
-my %known_opt = map { $_ => 1 } qw(bytes_only ascii_hex);
+my %known_opt = map { $_ => 1 } qw(bytes_only ascii_hex overlong_fatal);
 
 my %non_1252  = (
     "\x81" => '%81',
@@ -36,7 +36,12 @@ my %non_1252  = (
 
 sub fix_latin {
     my $input = shift;
-    my %opt   = (ascii_hex => 1, @_);
+    my %opt   = (
+        ascii_hex      => 1,
+        bytes_only     => 0,
+        overlong_fatal => 0,
+        @_
+    );
 
     foreach (keys %opt) {
         croak "Unknown option '$_'" unless $known_opt{$_};
@@ -57,25 +62,26 @@ sub fix_latin {
     my $output = '';
     my $char   = '';
     my $rest   = '';
+    my $olf    = $opt{overlong_fatal};
     while(length($input) > 0) {
         if($input =~ $ascii_str) {
             $output .= $1;
             $rest = $2;
         }
         elsif($input =~ $utf8_2) {
-            $output .= _decode_utf8(ord($1) & 0x1F, $2);
+            $output .= _decode_utf8($olf, ord($1) & 0x1F, $1, $2);
             $rest = $3;
         }
         elsif($input =~ $utf8_3) {
-            $output .= _decode_utf8(ord($1) & 0x0F, $2, $3);
+            $output .= _decode_utf8($olf, ord($1) & 0x0F, $1, $2, $3);
             $rest = $4;
         }
         elsif($input =~ $utf8_4) {
-            $output .= _decode_utf8(ord($1) & 0x07, $2, $3, $4);
+            $output .= _decode_utf8($olf, ord($1) & 0x07, $1, $2, $3, $4);
             $rest = $5;
         }
         elsif($input =~ $utf8_5) {
-            $output .= _decode_utf8(ord($1) & 0x03, $2, $3, $4, $5);
+            $output .= _decode_utf8($olf, ord($1) & 0x03, $1, $2, $3, $4, $5);
             $rest = $6;
         }
         else {
@@ -95,11 +101,18 @@ sub fix_latin {
 
 
 sub _decode_utf8 {
-    my $i = shift;
-    while(@_) {
-        $i = ($i << 6) + (ord(shift) & 0x3F);
+    my $overlong_fatal = shift;
+    my $c              = shift;
+    my $byte_count     = @_;
+    foreach my $i (1..$#_) {
+        $c = ($c << 6) + (ord($_[$i]) & 0x3F);
     }
-    return encode_utf8(chr($i));
+    my $bytes = encode_utf8(chr($c));
+    if($overlong_fatal and $byte_count > length($bytes)) {
+        my $hex_bytes= join ' ', map { sprintf('%02X', ord($_)) } @_;
+        croak "Over-long UTF-8 byte sequence: $hex_bytes";
+    }
+    return $bytes;
 }
 
 
@@ -243,7 +256,8 @@ the overhead of converting to and from Perl's internal representation.
 =item ascii_hex => 1/0
 
 Bytes in the range 0x80-0x9F are assumed to be CP1252, however CP1252 does not
-define a mapping for 5 of these bytes (0x81, 0x8D, 0x8F, 0x90 and 0x9D).
+define a mapping for 5 of these bytes (0x81, 0x8D, 0x8F, 0x90 and 0x9D).  Use
+this option to specify how they should be handled:
 
 =over 4
 
@@ -265,6 +279,31 @@ bytes at all.  The most likely reason you would see them is if a malicious
 attacker was feeding random bytes to your application.  It is difficult to
 conceive of a scenario in which it makes sense to change this option from its
 default setting.
+
+=item overlong_fatal => 1/0
+
+An over-long UTF-8 byte sequence is one which uses more than the minimum number
+of bytes required to represent the character.  Use this option to specify how
+overlong sequences should be handled.
+
+=over 4
+
+=item *
+
+If the overlong_fatal option is set to false (the default) over-long sequences
+will be converted to the shortest normal UTF-8 sequence.  For example the input
+byte string "\xC0\xBCscript>" would be converted to "<script>".
+
+=item *
+
+If the overlong_fatal option is set to true, this module will die with an
+error when an overlong sequence is encountered.  You would probably want to
+use eval to trap and handle this scenario.
+
+=back
+
+There is a strong argument that overlong sequences are only ever encountered
+in malicious input and therefore they should always be rejected.
 
 =back
 
@@ -354,7 +393,7 @@ L<http://search.cpan.org/dist/Encoding-FixLatin/>
 
 =item * Source code repository
 
-L<http://github.com/grantm/encoding-fixlatin/tree/master>
+L<http://github.com/grantm/encoding-fixlatin>
 
 =back
 

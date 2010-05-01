@@ -1,6 +1,6 @@
 #!perl -T
 
-use Test::More tests => 22;
+use Test::More tests => 25;
 
 BEGIN {
     use_ok( 'Encoding::FixLatin', 'fix_latin' );
@@ -49,6 +49,11 @@ is(fix_latin("\xE0\x83\x9A") => "\x{DA}",
 
 is(fix_latin("\xC0\xBCscript>\xE0\x80\xAE./\xF0\x80\x80\xBB") => "<script>../;",
     'Malicious over-long UTF-8 sequence converted to plain ASCII');
+
+my $bytes = eval { fix_latin("\xE0\x83\x9A", overlong_fatal => 1); };
+is($bytes => undef, 'No bytes returned for fatal over-long UTF-8 sequence');
+like("$@", qr/Over-long UTF-8 byte sequence/, 'Exception error message looks good');
+like("$@", qr/ E0 83 9A/, 'Hex bytes listed in error message looks good');
 
 is(fix_latin("\x80\x81\x82") => "\x{20AC}%81\x{201A}",
     'Undefined (CP1252) byte ASCIIised by default');
