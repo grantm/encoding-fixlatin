@@ -5,7 +5,7 @@ use strict;
 
 require 5.008;
 
-our $VERSION = '1.02';
+our $VERSION = '1.03';
 
 use Carp     qw(croak);
 use Exporter qw(import);
@@ -13,6 +13,8 @@ use Encode   qw(is_utf8 encode_utf8);
 
 our @EXPORT_OK = qw(fix_latin);
 
+
+my $xs_loaded  = undef; # no attempt to load yet
 
 my $byte_map;
 
@@ -24,7 +26,7 @@ my $utf8_3    = qr{\A([\xE0-\xEF])($cont_byte)($cont_byte)(.*)\z}s;
 my $utf8_4    = qr{\A([\xF0-\xF7])($cont_byte)($cont_byte)($cont_byte)(.*)\z}s;
 my $utf8_5    = qr{\A([\xF8-\xFB])($cont_byte)($cont_byte)($cont_byte)($cont_byte)(.*)\z}s;
 
-my %known_opt = map { $_ => 1 } qw(bytes_only ascii_hex overlong_fatal);
+my %known_opt = map { $_ => 1 } qw(bytes_only ascii_hex overlong_fatal use_xs);
 
 my %non_1252  = (
     "\x81" => '%81',
@@ -40,6 +42,7 @@ sub fix_latin {
         ascii_hex      => 1,
         bytes_only     => 0,
         overlong_fatal => 0,
+        use_xs         => 'auto',
         @_
     );
 
@@ -49,6 +52,7 @@ sub fix_latin {
 
     return unless defined($input);
     _init_byte_map(\%opt) unless $byte_map;
+    _init_xs($opt{use_xs});
 
     if(is_utf8($input)) {       # input string already has utf8 flag set
         if($opt{bytes_only}) {
@@ -59,10 +63,20 @@ sub fix_latin {
         }
     }
 
+    if($xs_loaded and $opt{use_xs} ne 'never') {
+        return Encoding::FixLatin::XS::_fix_latin_xs($input);
+    }
+    return _fix_latin_pp($input, \%opt);
+}
+
+
+sub _fix_latin_pp {
+    my($input, $opt) = @_;
+
     my $output = '';
     my $char   = '';
     my $rest   = '';
-    my $olf    = $opt{overlong_fatal};
+    my $olf    = $opt->{overlong_fatal};
     while(length($input) > 0) {
         if($input =~ $ascii_str) {
             $output .= $1;
@@ -86,7 +100,7 @@ sub fix_latin {
         }
         else {
             ($char, $rest) = $input =~ /^(.)(.*)$/s;
-            if($opt{ascii_hex} && exists $non_1252{$char}) {
+            if($opt->{ascii_hex} && exists $non_1252{$char}) {
                 $output .= $non_1252{$char};
             }
             else {
@@ -95,7 +109,7 @@ sub fix_latin {
         }
         $input = $rest;
     }
-    utf8::decode($output) unless $opt{bytes_only};
+    utf8::decode($output) unless $opt->{bytes_only};
     return $output;
 }
 
@@ -123,6 +137,22 @@ sub _init_byte_map {
         $byte_map->{pack('C', $i)} = $utf_char;
     }
     _add_cp1252_mappings();
+}
+
+
+sub _init_xs {
+    my($use_xs) = @_;
+
+    if($use_xs eq 'never' or $xs_loaded) {
+        return;
+    }
+    if(!defined($xs_loaded)) {
+        local($@);
+        $xs_loaded = eval { require 'Encoding/FixLatin/XS.pm' } ? 1 : 0;
+    }
+    if(!$xs_loaded and $use_xs eq 'always') {
+        croak "Failed to load Encoding::FixLatin::XS";
+    }
 }
 
 
@@ -304,6 +334,30 @@ use eval to trap and handle this scenario.
 
 There is a strong argument that overlong sequences are only ever encountered
 in malicious input and therefore they should always be rejected.
+
+=item use_xs => 'auto' | 'always' | 'never'
+
+This option controls whether or not the XS (compiled C) implementation of
+C<fix_latin> is used.  Note, the L<Encoding::FixLatin::XS> module must be
+installed separately.  The three possible values for this option are:
+
+=over 4
+
+=item *
+
+'auto' is the default behaviour - if L<Encoding::FixLatin::XS> is installed, it
+will be loaded and used, otherwise the pure Perl implementation will be used.
+
+=item *
+
+'always' means the XS module will be used and a fatal exception will be thrown
+if it is not available.
+
+=item *
+
+'never' means no attempt will be made to use the XS module.
+
+=back
 
 =back
 
