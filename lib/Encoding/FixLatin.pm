@@ -64,7 +64,16 @@ sub fix_latin {
     }
 
     if($xs_loaded and $opt{use_xs} ne 'never') {
-        return Encoding::FixLatin::XS::_fix_latin_xs($input);
+        my $olf = $opt{overlong_fatal} ? 1 : 0;
+        local($@);
+        $input = eval {   # assign back to $input to avoid copying if all ASCII
+            Encoding::FixLatin::XS::_fix_latin_xs($input, $olf);
+        };
+        if(my $msg = $@) {
+            chomp($msg);
+            croak $msg;
+        };
+        return $input;
     }
     return _fix_latin_pp($input, \%opt);
 }
