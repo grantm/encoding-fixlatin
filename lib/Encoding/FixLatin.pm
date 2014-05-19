@@ -74,7 +74,12 @@ sub fix_latin {
             chomp($msg);
             croak $msg;
         };
-        return $input;
+        if($opt{bytes_only}) {
+            return encode_utf8($input);
+        }
+        else {
+            return $input;
+        }
     }
     return _fix_latin_pp($input, \%opt);
 }
