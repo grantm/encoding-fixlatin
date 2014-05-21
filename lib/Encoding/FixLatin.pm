@@ -444,9 +444,9 @@ You can also look for information at:
 
 =over 4
 
-=item * RT: CPAN's request tracker
+=item * Issue tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Encoding-FixLatin>
+L<https://github.com/grantm/encoding-fixlatin/issues>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
@@ -467,14 +467,9 @@ L<http://github.com/grantm/encoding-fixlatin>
 =back
 
 
-=head1 AUTHOR
-
-Grant McLean, C<< <grantm at cpan.org> >>
-
-
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2009-2010 Grant McLean
+Copyright 2009-2014 Grant McLean C<< <grantm@cpan.org> >>
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
