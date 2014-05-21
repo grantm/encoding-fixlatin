@@ -1,4 +1,8 @@
-Revision history for Encoding-FixLatin
+Revision history for Perl extension {{$dist->name}}
+
+{{$NEXT}}
+      - add support for loading/using XS implementation layer
+      - repackage using dzil
 
 1.02  2010-04-30
       - shrink over-long UTF-8 sequences to shortest form
