@@ -24,11 +24,21 @@ use Encoding::FixLatin qw(fix_latin);
 
 my %opt;
 
-if(!GetOptions(\%opt, 'help|?')) {
+if(!GetOptions(\%opt, 'help|?', 'version|s')) {
     pod2usage(-exitval => 1,  -verbose => 0);
 }
 
 pod2usage(-exitstatus => 0, -verbose => 2) if($opt{'help'});
+
+if($opt{version}) {
+    fix_latin('');      # Load XS layer if available
+    my $xs_version = defined($Encoding::FixLatin::XS::VERSION)
+                     ? "version $Encoding::FixLatin::XS::VERSION"
+                     : 'not installed';
+    print "Encoding::FixLatin      version $Encoding::FixLatin::VERSION\n";
+    print "Encoding::FixLatin::XS  $xs_version\n";
+    exit;
+}
 
 while(<>) {
     $_ = fix_latin($_, bytes_only => 1) if /[^\x00-\x7f]/;
@@ -50,7 +60,8 @@ latin (ie: non-ASCII 8 bit) characters
 
   Options:
 
-   -?     detailed help message
+   --version  list version number
+   --help     detailed help message
 
 =head1 DESCRIPTION
 
@@ -70,7 +81,11 @@ byte characters will be converted as follows:
 
 =over 4
 
-=item B<-?>
+=item B<--version> (alias -v)
+
+Display version number of underlying Encoding::FixLatin and XS modules.
+
+=item B<--help> (alias -?)
 
 Display this documentation.
 
