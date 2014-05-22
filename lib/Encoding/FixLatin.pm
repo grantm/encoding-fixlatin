@@ -5,8 +5,6 @@ use strict;
 
 require 5.008;
 
-our $VERSION = '1.03';
-
 use Carp     qw(croak);
 use Exporter qw(import);
 use Encode   qw(is_utf8 encode_utf8);
