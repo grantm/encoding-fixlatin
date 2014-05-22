@@ -24,7 +24,7 @@ use Encoding::FixLatin qw(fix_latin);
 
 my %opt;
 
-if(!GetOptions(\%opt, 'help|?', 'version|s')) {
+if(!GetOptions(\%opt, 'help|?', 'version|v', 'use_xs|use-xs=s')) {
     pod2usage(-exitval => 1,  -verbose => 0);
 }
 
@@ -40,8 +40,10 @@ if($opt{version}) {
     exit;
 }
 
+my @use_xs = ( use_xs => $opt{use_xs} || 'auto' );
+
 while(<>) {
-    $_ = fix_latin($_, bytes_only => 1) if /[^\x00-\x7f]/;
+    $_ = fix_latin($_, bytes_only => 1, @use_xs) if /[^\x00-\x7f]/;
     print;
 }
 
@@ -60,8 +62,9 @@ latin (ie: non-ASCII 8 bit) characters
 
   Options:
 
-   --version  list version number
-   --help     detailed help message
+   --use-xs <value> 'auto' | 'always' | 'never'
+   --version        list version number
+   --help           detailed help message
 
 =head1 DESCRIPTION
 
@@ -80,6 +83,12 @@ byte characters will be converted as follows:
 =head1 OPTIONS
 
 =over 4
+
+=item B<< --use-xs 'auto' | 'always' | 'never' >>
+
+Override default ('auto') behaviour of trying to use XS module and falling back
+to pure-Perl version if not available.  Set to 'never' to always use the Perl
+version or 'always' to always use XS and die if not available.
 
 =item B<--version> (alias -v)
 
