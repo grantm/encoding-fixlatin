@@ -1,10 +1,17 @@
 #!perl -T
 
-use Test::More tests => 6;
+use strict;
+use warnings;
 
-BEGIN {
-    use_ok( 'Encoding::FixLatin' );
-}
+use Test::More;
+
+use Encoding::FixLatin;
+
+ok(1, "Successfully loaded Encoding::FixLatin::XS via 'use'");
+
+diag(
+    "Testing Encoding::FixLatin $Encoding::FixLatin::VERSION, Perl $], $^X"
+);
 
 ok(!__PACKAGE__->can('fix_latin'), 'fix_latin() function was not imported');
 
@@ -16,3 +23,6 @@ eval {
 };
 like("$@", qr{Unknown option 'dwim'}, 'bad option caught');
 like("$@", qr{at.*00-basics.*line},   'calling context in error message');
+
+done_testing;
+
